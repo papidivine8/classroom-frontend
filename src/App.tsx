@@ -5,7 +5,6 @@ import {
 } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-
 import { BrowserRouter, Route, Routes, Outlet } from "react-router";
 import routerProvider, {
   NavigateToResource,
@@ -13,7 +12,7 @@ import routerProvider, {
   UnsavedChangesNotifier,
   DocumentTitleHandler,
 } from "@refinedev/react-router";
-import { dataProvider } from "./providers/data";
+import { dataProvider } from "./provider mock/data";
 //import { Login } from "./pages/login";
 //import { Register } from "./pages/register";
 //import { ForgotPassword } from "./pages/forgot-password";

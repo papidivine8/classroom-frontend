@@ -10,9 +10,9 @@ const buildHttpError = async (response: Response): Promise<HttpError> => {
   let message = 'Request failed.';
 
   try {
-    const payload = (await response.json()) as { message?: string }
+    const payload = (await response.json()) as { message?: string; error?: string }
 
-    if (payload?.message) message = payload.message;
+    if (payload?.message || payload?.error) message = payload.message ?? payload.error ?? message;
   } catch {
       // Ignore errors
   }
@@ -42,6 +42,16 @@ const options: CreateDataProviderOptions = {
           if (field === 'department') params.department = value;
           if (field === 'name' || field === 'code') params.search = value;
         }
+
+        if (resource === 'classes') {
+          if (field === 'subject') params.subject = value;
+          if (field === 'teacher') params.teacher = value;
+          if (field === 'name') params.search = value;
+        }
+
+        if(resource === 'users' && field === 'role') {
+          params.role = value;
+        }
       })
 
       return params
@@ -70,6 +80,7 @@ const options: CreateDataProviderOptions = {
     buildBodyParams: async ({ variables }) => variables,
 
     mapResponse: async (response) => {
+      if (!response.ok) throw await buildHttpError(response);
       const json: CreateResponse = await response.json();
 
       return json.data ?? [];
@@ -80,13 +91,25 @@ const options: CreateDataProviderOptions = {
     getEndpoint: ({ resource, id }) => `${resource}/${id}`,
 
     mapResponse: async (response) => {
+      if (!response.ok) throw await buildHttpError(response);
       const json: GetOneResponse = await response.clone().json();
 
       return json.data ?? [];
      },
-  }
+  },
+
+  update: {
+    getRequestMethod: () => "put",
+    mapResponse: async (response) => {
+      if (!response.ok) throw await buildHttpError(response);
+      const json: GetOneResponse = await response.json();
+      return json.data ?? [];
+    },
+  },
 }
 
-const { dataProvider } = createDataProvider(BACKEND_BASE_URL, options);
+const { dataProvider } = createDataProvider(BACKEND_BASE_URL, options, {
+  credentials: "include",
+});
 
 export { dataProvider }

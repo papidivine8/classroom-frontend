@@ -5,7 +5,7 @@ import {
 } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-import { BrowserRouter, Route, Routes, Outlet } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router";
 import routerProvider, {
   NavigateToResource,
   CatchAllNavigate,
@@ -30,6 +30,13 @@ import SubjectsCreate from "./pages/subjects/create";
 import ClassesList from "./pages/classes/list";
 import ClassesCreate from "./pages/classes/create";
 import ClassesShow from "./pages/classes/show";
+import ClassEdit from "./pages/classes/edit";
+import SubjectEdit from "./pages/subjects/edit";
+import AuthPage from "./pages/auth";
+import { authProvider } from "./provider mock/auth";
+import AdminUsers from "./pages/admin/users";
+import MyClasses from "./pages/classes/my-classes";
+import AdminDepartments from "./pages/admin/departments";
 
 function App() {
   return (
@@ -39,6 +46,7 @@ function App() {
           <DevtoolsProvider>
             <Refine
               dataProvider={dataProvider}
+              authProvider={authProvider}
               notificationProvider={useNotificationProvider()}
               routerProvider={routerProvider}
               options={{
@@ -56,33 +64,48 @@ function App() {
                   name: 'subjects',
                   list: '/subjects',
                   create: '/subjects/create',
+                  edit: '/subjects/edit/:id',
                   meta: { label: 'Subjects', icon: <BookOpen /> }
                 },
                 {
                   name: 'classes',
                   list: '/classes',
                   create: '/classes/create',
+                  edit: '/classes/edit/:id',
                   show: '/classes/show/:id',
                   meta: { label: 'Classes', icon: <GraduationCap /> }
                 }
               ]}
             >
               <Routes>
+                <Route path="login" element={<AuthPage mode="login" />} />
+                <Route path="register" element={<AuthPage mode="register" />} />
                 <Route element={
                   <Layout>
                     <Outlet />
                   </Layout>
                 }>
                   <Route path="/" element={<Dashboard />} />
+                  <Route element={
+                    <Authenticated key="signed-in" fallback={<Navigate to="/login" replace />} loading={<p>Checking sign-in...</p>}>
+                      <Outlet />
+                    </Authenticated>
+                  }>
+                    <Route path="admin/users" element={<AdminUsers />} />
+                    <Route path="admin/departments" element={<AdminDepartments />} />
+                    <Route path="my-classes" element={<MyClasses />} />
+                    <Route path="subjects/create" element={<SubjectsCreate />} />
+                    <Route path="subjects/edit/:id" element={<SubjectEdit />} />
+                    <Route path="classes/create" element={<ClassesCreate />} />
+                    <Route path="classes/edit/:id" element={<ClassEdit />} />
+                  </Route>
                   <Route path="subjects">
                     <Route index element={<SubjectsList />} />
-                    <Route path="create" element={<SubjectsCreate />} />
                   </Route>
 
                   <Route path="classes">
                     <Route index element={<ClassesList />} />
-                    <Route path="create" element={<ClassesCreate />} />
-                    <Route path="show" element={<ClassesShow />} />
+                    <Route path="show/:id" element={<ClassesShow />} />
                   </Route>
                 </Route>
               </Routes>

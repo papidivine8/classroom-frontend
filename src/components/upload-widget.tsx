@@ -1,14 +1,17 @@
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from "@/constants";
-import { UploadWidgetValue } from "@/types";
+import { UploadWidgetProps, UploadWidgetValue } from "@/types";
 import { UploadCloud } from "lucide-react";
 import { useEffect, useRef, useState } from "react"
 
-const UploadWidget = ({ value = null, onChange, disabled = false }) => {
+const UploadWidget = ({ 
+    value = null, 
+    onChange, 
+    disabled = false, 
+}: UploadWidgetProps) => {
     const widgetRef = useRef<CloudinaryWidget | null>(null)
     const onChangeRef = useRef(onChange);
     
     const [preview, setPreview] = useState(value);
-    const [isRemoving, setIsRemoving] = useState(false);
 
     useEffect(() => {
         setPreview(value);
@@ -27,7 +30,7 @@ const UploadWidget = ({ value = null, onChange, disabled = false }) => {
             widgetRef.current = window.cloudinary.createUploadWidget({
                 cloudName: CLOUDINARY_CLOUD_NAME,
                 uploadPreset: CLOUDINARY_UPLOAD_PRESET,
-                mutlipe: false,
+                multiple: false,
                 folder: 'uploads',
                 maxFileSize: 5000000,
                 clientAllowedFormats: ['png', 'jpg', 'jpeg', 'webp']

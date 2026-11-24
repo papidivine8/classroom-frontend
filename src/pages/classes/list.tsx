@@ -10,13 +10,17 @@ import {useTable} from "@refinedev/react-table";
 import {ClassDetails, Subject, User} from "@/types";
 import {ColumnDef} from "@tanstack/react-table";
 import {Badge} from "@/components/ui/badge.tsx";
-import {useList} from "@refinedev/core";
+import {useGetIdentity, useList} from "@refinedev/core";
 import {ShowButton} from "@/components/refine-ui/buttons/show.tsx";
+import {EditButton} from "@/components/refine-ui/buttons/edit.tsx";
+import {DeleteButton} from "@/components/refine-ui/buttons/delete.tsx";
+import type {AppIdentity} from "@/provider mock/auth";
 
 const ClassesList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('all');
     const [selectedTeacher, setSelectedTeacher] = useState('all');
+    const { data: identity } = useGetIdentity<AppIdentity>();
 
     const { query: subjectsQuery } = useList<Subject>({
         resource: 'subjects',
@@ -101,12 +105,29 @@ const ClassesList = () => {
             cell: ({ getValue }) => <span className="text-foreground">{getValue<number>()}</span>,
         },
         {
+            id: 'enrollmentCount',
+            accessorKey: 'enrollmentCount',
+            size: 130,
+            header: () => <p className="column-title">Enrollment</p>,
+            cell: ({ row }) => <span className="text-foreground">{row.original.enrollmentCount ?? 0} / {row.original.capacity}</span>,
+        },
+        {
             id: 'details',
             size: 140,
-            header: () => <p className="column-title">Details</p>,
-            cell: ({ row }) => <ShowButton resource="classes" recordItemId={row.original.id} variant="outline" size="sm">View</ShowButton>
+            header: () => <p className="column-title">Actions</p>,
+            cell: ({ row }) => (
+                <div className="flex gap-2">
+                    <ShowButton resource="classes" recordItemId={row.original.id} variant="outline" size="sm">View</ShowButton>
+                    {(identity?.role === "admin" || (identity?.role === "teacher" && identity.id === row.original.teacherId)) && (
+                        <>
+                            <EditButton resource="classes" recordItemId={row.original.id} size="sm" />
+                            <DeleteButton resource="classes" recordItemId={row.original.id} size="sm" />
+                        </>
+                    )}
+                </div>
+            )
         }
-    ], []);
+    ], [identity]);
 
     const classTable = useTable<ClassDetails>({
         columns: classColumns,
@@ -185,7 +206,9 @@ const ClassesList = () => {
                             </SelectContent>
                         </Select>
 
-                        <CreateButton resource="classes" />
+                        {(identity?.role === "teacher" || identity?.role === "admin") && (
+                            <CreateButton resource="classes" />
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,9 +1,10 @@
 export type Subject = {
     id: number;
+    departmentId?: number;
     name: string;
     code: string;
-    description: string;
-    department: string;
+    description: string | null;
+    department: Department | string;
     createdAt?: string;
 };
 
@@ -73,9 +74,9 @@ export enum UserRole {
 
 export type User = {
     id: string;
-    createdAt: string;
-    updatedAt: string;
-    email: string;
+    createdAt?: string;
+    updatedAt?: string;
+    email?: string;
     name: string;
     role: UserRole;
     image?: string;
@@ -92,21 +93,23 @@ export type Schedule = {
 export type Department = {
     id: number;
     name: string;
-    description: string;
+    code?: string;
+    description: string | null;
 };
 
 export type ClassDetails = {
     id: number;
+    subjectId: number;
+    teacherId: string;
     name: string;
-    description: string;
-    status: "active" | "inactive";
+    description: string | null;
+    status: "active" | "inactive" | "archived";
     capacity: number;
-    courseCode: string;
-    courseName: string;
-    bannerUrl?: string;
-    bannerCldPubId?: string;
+    enrollmentCount?: number;
+    bannerUrl?: string | null;
+    bannerCldPubId?: string | null;
     subject?: Subject;
-    teacher?: User;
+    teacher?: Pick<User, "id" | "name" | "image" | "role">;
     department?: Department;
     schedules: Schedule[];
     inviteCode?: string;

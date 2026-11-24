@@ -1,6 +1,6 @@
 import {
   useRefineOptions,
-  useActiveAuthProvider,
+  useGetIdentity,
   useLogout,
 } from "@refinedev/core";
 import {
@@ -14,6 +14,8 @@ import { UserAvatar } from "@/components/refine-ui/layout/user-avatar";
 import { useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
 import { LogOutIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router";
+import type { AppIdentity } from "@/provider mock/auth";
 
 export const Header = () => {
   const { isMobile } = useSidebar();
@@ -112,19 +114,19 @@ function MobileHeader() {
         </h2>
       </div>
 
-      <ThemeToggle className={cn("h-8", "w-8")} />
+      <div className="flex items-center gap-2">
+        <ThemeToggle className={cn("h-8", "w-8")} />
+        <UserDropdown />
+      </div>
     </header>
   );
 }
 
 const UserDropdown = () => {
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
-
-  const authProvider = useActiveAuthProvider();
-
-  if (!authProvider?.getIdentity) {
-    return null;
-  }
+  const { data: identity, isLoading } = useGetIdentity<AppIdentity>();
+  if (isLoading) return null;
+  if (!identity) return <Link className="text-sm underline" to="/login">Sign in</Link>;
 
   return (
     <DropdownMenu>
@@ -132,6 +134,21 @@ const UserDropdown = () => {
         <UserAvatar />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {identity.role === "student" && (
+          <DropdownMenuItem asChild>
+            <Link to="/my-classes">My classes</Link>
+          </DropdownMenuItem>
+        )}
+        {identity.role === "admin" && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link to="/admin/users">Manage users</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/admin/departments">Manage departments</Link>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuItem
           onClick={() => {
             logout();

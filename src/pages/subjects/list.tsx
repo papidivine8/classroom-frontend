@@ -3,18 +3,26 @@ import { DataTable } from "@/components/refine-ui/data-table/data-table"
 import { Breadcrumb } from "@/components/refine-ui/layout/breadcrumb"
 import { ListView } from "@/components/refine-ui/views/list-view"
 import { Input } from "@/components/ui/input"
-import { DEPARTMENT_OPTIONS, DEPARTMENTS } from "@/constants"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge, Search } from "lucide-react"
+import { Search } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { useMemo, useState } from "react"
 import { useTable } from "@refinedev/react-table"
-import { Subject } from "@/types"
-import { Pagination } from "@/components/ui/pagination"
-import { ColumnDef } from "@tanstack/react-table"
+import { Department, Subject } from "@/types"
+import { ColumnDef, Row } from "@tanstack/react-table"
+import { useGetIdentity, useList } from "@refinedev/core"
+import { EditButton } from "@/components/refine-ui/buttons/edit"
+import { DeleteButton } from "@/components/refine-ui/buttons/delete"
+import type { AppIdentity } from "@/provider mock/auth"
 
 const SubjectsList = () => {
     const [seacrhQuery, setSeacrhQuery] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('all');
+    const { data: identity } = useGetIdentity<AppIdentity>();
+    const { query: departmentsQuery } = useList<Department>({
+        resource: "departments",
+        pagination: { pageSize: 100 },
+    });
 
     const departmentFilters = selectedDepartment === 'all' ? [] : [
         { 
@@ -53,7 +61,7 @@ const SubjectsList = () => {
                 size: 150,
                 header: () => <p className="column-title">Department</p>,
                 cell: ({ getValue }) => <Badge 
-                fontVariant="secondary">{getValue<String>()}</Badge>
+                variant="secondary">{getValue<String>()}</Badge>
              },
              {
                 id: 'description',
@@ -62,9 +70,19 @@ const SubjectsList = () => {
                 header: () => <p className="column-title">Description</p>,
                 cell: ({ getValue }) => <span 
                 className="truncate line-clamp-2">{getValue<String>()}</span>
-             }
+             },
+             ...(identity?.role === "admin" ? [{
+                id: 'actions',
+                header: () => <p className="column-title">Actions</p>,
+                cell: ({ row }: { row: Row<Subject> }) => (
+                    <div className="flex gap-2">
+                        <EditButton resource="subjects" recordItemId={row.original.id} size="sm" />
+                        <DeleteButton resource="subjects" recordItemId={row.original.id} size="sm" />
+                    </div>
+                ),
+             }] : [])
              
-        ], []),
+        ], [identity?.role]),
         refineCoreProps: {
             resource: 'subjects',
             pagination: { pageSize: 10, mode: 'server' },
@@ -114,16 +132,16 @@ const SubjectsList = () => {
                                 <SelectItem value="all">
                                     All Departments
                                 </SelectItem>
-                                {DEPARTMENT_OPTIONS.map(department => (
-                                    <SelectItem key={department.value} 
-                                    value={department.value}>
-                                        {department.label}
+                                {departmentsQuery.data?.data.map(department => (
+                                    <SelectItem key={department.id} 
+                                    value={department.name}>
+                                        {department.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
 
-                        <CreateButton />
+                        {identity?.role === "admin" && <CreateButton resource="subjects" />}
                     </div>
                 </div>
             </div>

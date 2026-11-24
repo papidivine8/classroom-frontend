@@ -1,7 +1,8 @@
 import {CreateView} from "@/components/refine-ui/views/create-view.tsx";
 import {Breadcrumb} from "@/components/refine-ui/layout/breadcrumb.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {useBack, useList} from "@refinedev/core";
+import {useBack, useGetIdentity, useList} from "@refinedev/core";
+import { Link } from "react-router";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -25,10 +26,12 @@ import {Textarea} from "@/components/ui/textarea.tsx";
 import {Loader2} from "lucide-react";
 import UploadWidget from "@/components/upload-widget";
 import { Subject, User } from "@/types";
+import type { AppIdentity } from "@/provider mock/auth";
 
 
 const Create = () => {
     const back = useBack();
+    const { data: identity, isLoading: identityLoading } = useGetIdentity<AppIdentity>();
 
     const form = useForm({
         resolver: zodResolver(classSchema),
@@ -92,6 +95,11 @@ const Create = () => {
                 shouldDirty: true
             })
         }
+    }
+
+    if (identityLoading) return <p>Checking permissions...</p>;
+    if (identity?.role !== "teacher" && identity?.role !== "admin") {
+        return <p role="alert">Only teachers and admins can create classes. <Link className="underline" to="/login">Sign in</Link> with an authorized account.</p>;
     }
 
     return (
